@@ -1,0 +1,21 @@
+# Environnement virtuel
+venv/
+.venv/
+env/
+bin/
+lib/
+
+# Fichiers de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Données et modèles (si tu en télécharges plus tard)
+data/raw/
+models/*.pt
+models/*.bin
+
+# Divers
+.DS_Store
+.vscode/
+.idea/
