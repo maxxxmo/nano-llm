@@ -19,12 +19,12 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install pylint
         if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
-        # python -m pylint src/ --rcfile=.pylintrc
-        python -m pylint src/ --fail-under=7.0
+        # python -m pylint src/ tests/ --rcfile=.pylintrc
+        python -m pylint src/ tests/ --fail-under=7.0
 
 
     - name: Analysing the code with pylint
       run: |
         # pylint $(git ls-files '*.py') --fail-under=7.0 --ignore=.venv --disable=C,W
-        python -m pylint src/ --fail-under=7.0 --disable=C,W
+        python -m pylint src/ tests/ --fail-under=7.0 --disable=C,W
         

@@ -19,23 +19,3 @@ class NoGrad:
         """
         Value.grad_enabled = self.prev_state
 
-class Precision:
-    """Définit la précision des calculs (ex: 32 ou 64 bits)."""
-    dtype = "float32"
-    def __init__(self, type_str):
-        """_summary_
-
-        Args:
-            type_str (_type_): _description_
-        """
-        self.type_str = type_str
-    def __enter__(self):
-        """_summary_
-        """
-        self.old_type = Precision.dtype
-        Precision.dtype = self.type_str
-    def __exit__(self, *args):
-        """_summary_
-        """
-        Precision.dtype = self.old_type
-        

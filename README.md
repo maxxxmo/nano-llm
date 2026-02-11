@@ -48,8 +48,9 @@ Then i need to implement activation functions but it makes me realize i have no 
 
 
 # 1 Automatic differenciation
-***(Using Karpathy's structure but i make it up to date by adding exponential, tanh, log, sigmoid, leaky_relu), Also like pytorch do i need a with torch.no_grad mode, zeroing of gradients, parameters() and optimizer()***
+***(Using Karpathy's structure but i make it up to date by adding exponential, tanh, log, sigmoid, leaky_relu), Also like pytorch do i need a with torch.no_grad mode,  and optimizer()***
 
+zeroing of gradients is already implemented in his code
 
 ### Explication Backpropagation
 

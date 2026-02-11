@@ -1,12 +1,11 @@
 # Value class constructed on micrograd example of Andrej Karpathy
 import numpy as np
-from src.model.config import precision
 # pylint: disable=protected-access
 class Value :
     """Value Class to follow operations
     """
     grad_enabled = True # For no_grad mode
-    def __init__(self, data, _children =(), _op=''):
+    def __init__(self, data, _children =(), _op='', dtype='float32'):
         """
         init
         Args:
@@ -14,7 +13,8 @@ class Value :
             _children (tuple, optional): _description_. Defaults to ().
             _op (str, optional): _description_. Defaults to ''.
         """
-        self.data = np.array(data, dtype=precision.dtype).item()
+        self.data = np.array(data, dtype=dtype).item()
+        self.dtype = dtype
         self.grad = 0
         self._backward = lambda:None  # no gradient at initialisation
         self._prev = set(_children) if Value.grad_enabled else set() # pour c = a + b les parents sont {a,b}
@@ -34,6 +34,10 @@ class Value :
             def _backward():
                 self.grad += out.grad
                 other.grad += out.grad
+        else:
+            def _backward():
+                pass
+        out._backward = _backward
         out._backward = _backward
 
         return out
@@ -56,6 +60,7 @@ class Value :
             def _backward():
                 pass
         out._backward = _backward
+        return out
 
     def __pow__(self, other):
         """
@@ -74,7 +79,6 @@ class Value :
             def _backward():
                 pass
         out._backward = _backward
-
         return out
 
     def relu(self):
@@ -129,7 +133,7 @@ class Value :
         Returns:
             _type_: _description_
         """
-        out = Value(( 1 - np.exp(2* self.data)) / (1 + np.exp( -2 * self.data)), (self,), 'tanh')
+        out = Value(( 1 - np.exp(-2* self.data)) / (1 + np.exp( -2 * self.data)), (self,), 'tanh')
         if Value.grad_enabled:
             def _backward():
                 self.grad += out.grad * (1 - out.data**2)

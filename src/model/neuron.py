@@ -24,14 +24,14 @@ class Neuron(Module):
         Module (_type_): _description_
     """
 
-    def __init__(self, nin, nonlin=True):
+    def __init__(self, nin, nonlin=True, dtype='float32'):
         """
         Args:
             nin (_type_): _description_
             nonlin (bool, optional): _description_. Defaults to True.
         """
-        self.w = [Value(random.uniform(-1,1)) for _ in range(nin)]
-        self.b = Value(0)
+        self.w = [Value(random.uniform(-1,1), dtype=dtype) for _ in range(nin)]
+        self.b = Value(0, dtype=dtype)
         self.nonlin = nonlin
 
     def __call__(self, x):
@@ -65,13 +65,13 @@ class Layer(Module):
         Module (_type_): _description_
     """
 
-    def __init__(self, nin, nout, **kwargs):
+    def __init__(self, nin, nout, dtype='float32', **kwargs):
         """
         Args:
             nin (_type_): _description_
             nout (_type_): _description_
         """
-        self.neurons = [Neuron(nin, **kwargs) for _ in range(nout)]
+        self.neurons = [Neuron(nin, dtype=dtype, **kwargs) for _ in range(nout)]
 
     def __call__(self, x):
         """
@@ -104,14 +104,14 @@ class MLP(Module):
         Module (_type_): _description_
     """
 
-    def __init__(self, nin, nouts):
+    def __init__(self, nin, nouts, dtype='float32'):
         """
         Args:
             nin (_type_): _description_
             nouts (_type_): _description_
         """
         sz = [nin] + nouts
-        self.layers = [Layer(sz[i], sz[i+1], nonlin=i!=len(nouts)-1) for i in range(len(nouts))]
+        self.layers = [Layer(sz[i], sz[i+1], dtype=dtype, nonlin=i!=len(nouts)-1) for i in range(len(nouts))]
 
     def __call__(self, x):
         """
