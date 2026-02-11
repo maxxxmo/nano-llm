@@ -2,7 +2,17 @@
 import numpy as np
 
 class Value :
+    """Value Class to follow operations
+    """
     def __init__(self, data, _children =(), _op=''):
+    
+            """
+            init
+            Args:
+                data (_type_): _description_
+                _children (tuple, optional): _description_. Defaults to ().
+                _op (str, optional): _description_. Defaults to ''.
+            """
             self.data = data
             self.grad = 0
             # For graph
@@ -11,6 +21,13 @@ class Value :
             self._op = _op  # Operation that created this value
     
     def __add__(self, other):
+        """
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data + other.data, (self, other), '+')
 
@@ -22,6 +39,13 @@ class Value :
         return out
 
     def __mul__(self, other):
+        """
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data * other.data, (self, other), '*')
 
@@ -33,6 +57,13 @@ class Value :
         return out
 
     def __pow__(self, other):
+        """
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         assert isinstance(other, (int, float)), "only supporting int/float powers for now"
         out = Value(self.data**other, (self,), f'**{other}')
 
@@ -43,6 +74,10 @@ class Value :
         return out
 
     def relu(self):
+        """
+        Returns:
+            _type_: _description_
+        """
         out = Value(0 if self.data < 0 else self.data, (self,), 'ReLU')
 
         def _backward():
@@ -52,39 +87,68 @@ class Value :
         return out
     
     def log(self):
+        """
+        Returns:
+            _type_: _description_
+        """
         assert self.data > 0, 'log value must be positive (in core)'
-        out = Value(np.log(self.data), (self,), f'log')
+        out = Value(np.log(self.data), (self,), 'log')
         def _backward():
             self.grad += (1 / self.data) * out.grad
         out._backward = _backward
-    
+        return out
     
     def exp(self):
-        out = Value(np.exp(self.data), (self,), f'exp')
+        """
+        Returns:
+            _type_: _description_
+        """
+        out = Value(np.exp(self.data), (self,), 'exp')
         def _backward():
             self.grad += out.data * out.grad
         out._backward = _backward
+        return out
     
     def tanh(self):
-        out = Value(( 1 - np.exp(2* self.data)) / (1 + np.exp( -2 * self.data)), (self,), f'tanh')
+        """
+        Returns:
+            _type_: _description_
+        """
+        out = Value(( 1 - np.exp(2* self.data)) / (1 + np.exp( -2 * self.data)), (self,), 'tanh')
         def _backward():
             self.grad += out.grad * (1 - out.data**2)
         out._backward= _backward
+        return out
     
     def sigmoid(self):
-        out = Value(np.exp(self.data) / (1 + np.exp(self.data)), (self,), f'sigmoid')
+        """
+        Returns:
+            _type_: _description_
+        """
+        out = Value(np.exp(self.data) / (1 + np.exp(self.data)), (self,), 'sigmoid')
         def _backward():
             self.grad += out.grad * out.data * (1 - out.data)
         out._backward= _backward
+        return out
         
     def leaky_relu(self, slope= 0.01): # https://docs.pytorch.org/docs/stable/generated/torch.nn.LeakyReLU.html
-        out = Value(slope * self.data if self.data < 0 else self.data, (self,), f'leaky_relu')
+        """
+        Args:
+            slope (float, optional): _description_. Defaults to 0.01.
+
+        Returns:
+            _type_: _description_
+        """
+        out = Value(slope * self.data if self.data < 0 else self.data, (self,), 'leaky_relu')
         def _backward():
             self.grad +=  slope * out.grad if self.data < 0 else out.grad
         out._backward= _backward
+        return out
     
 
     def backward(self):
+        """
+        """
 
         # topological order all of the children in the graph
         topo = []
@@ -125,3 +189,4 @@ class Value :
 
     def __repr__(self):
         return f"Value(data={self.data}, grad={self.grad})"
+    
