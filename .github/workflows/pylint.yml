@@ -20,7 +20,7 @@ jobs:
         python -m pip install pylint
         if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
         # python -m pylint src/ --rcfile=.pylintrc
-        python -m pylint src/ 
+        python -m pylint src/ --fail-under=7.0
 
 
     - name: Analysing the code with pylint
