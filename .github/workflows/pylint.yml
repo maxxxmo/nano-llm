@@ -16,7 +16,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pylint src/ --rcfile=.pylintrc
+        python -m pylint src/ --rcfile=.pylintrc
         python -m pip install --upgrade pip
         pip install pylint
         pip install -r requirements.txt
