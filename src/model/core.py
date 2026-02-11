@@ -1,5 +1,5 @@
 # Value class constructed on micrograd example of Andrej Karpathy
-
+import numpy as np
 
 class Value :
     def __init__(self, data, _children =(), _op=''):
@@ -50,6 +50,39 @@ class Value :
         out._backward = _backward
 
         return out
+    
+    def log(self):
+        assert self.data > 0, 'log value must be positive (in core)'
+        out = Value(np.log(self.data), (self,), f'log')
+        def _backward():
+            self.grad += (1 / self.data) * out.grad
+        out._backward = _backward
+    
+    
+    def exp(self):
+        out = Value(np.exp(self.data), (self,), f'exp')
+        def _backward():
+            self.grad += out.data * out.grad
+        out._backward = _backward
+    
+    def tanh(self):
+        out = Value(( 1 - np.exp(2* self.data)) / (1 + np.exp( -2 * self.data)), (self,), f'tanh')
+        def _backward():
+            self.grad += out.grad * (1 - out.data**2)
+        out._backward= _backward
+    
+    def sigmoid(self):
+        out = Value(np.exp(self.data) / (1 + np.exp(self.data)), (self,), f'sigmoid')
+        def _backward():
+            self.grad += out.grad * out.data * (1 - out.data)
+        out._backward= _backward
+        
+    def leaky_relu(self, slope= 0.01): # https://docs.pytorch.org/docs/stable/generated/torch.nn.LeakyReLU.html
+        out = Value(slope * self.data if self.data < 0 else self.data, (self,), f'leaky_relu')
+        def _backward():
+            self.grad +=  slope * out.grad if self.data < 0 else out.grad
+        out._backward= _backward
+    
 
     def backward(self):
 
@@ -77,7 +110,7 @@ class Value :
 
     def __sub__(self, other): # self - other
         return self + (-other)
-
+ 
     def __rsub__(self, other): # other - self
         return other + (-self)
 
