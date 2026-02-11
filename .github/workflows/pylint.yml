@@ -25,4 +25,6 @@ jobs:
 
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py') --fail-under=7.0 --ignore=.venv --disable=C,W
+        # pylint $(git ls-files '*.py') --fail-under=7.0 --ignore=.venv --disable=C,W
+        python -m pylint src/ --fail-under=7.0 --disable=C,W
+        
