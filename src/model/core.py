@@ -1,11 +1,12 @@
 # Value class constructed on micrograd example of Andrej Karpathy
 import numpy as np
+from src.model.config import precision
 # pylint: disable=protected-access
 class Value :
     """Value Class to follow operations
     """
+    grad_enabled = True # For no_grad mode
     def __init__(self, data, _children =(), _op=''):
-    
             """
             init
             Args:
@@ -13,12 +14,11 @@ class Value :
                 _children (tuple, optional): _description_. Defaults to ().
                 _op (str, optional): _description_. Defaults to ''.
             """
-            self.data = data
+            self.data = np.array(data, dtype=precision.dtype).item()
             self.grad = 0
-            # For graph
             self._backward = lambda:None  # no gradient at initialisation
-            self._prev = set(_children) # pour c = a + b les parents sont {a,b}
-            self._op = _op  # Operation that created this value
+            self._prev = set(_children) if Value.grad_enabled else set() # pour c = a + b les parents sont {a,b}
+            self._op = _op if Value.grad_enabled else '' # Operation that created this value
     
     def __add__(self, other):
         """
@@ -30,10 +30,10 @@ class Value :
         """
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data + other.data, (self, other), '+')
-
-        def _backward():
-            self.grad += out.grad
-            other.grad += out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += out.grad
+                other.grad += out.grad
         out._backward = _backward
 
         return out
@@ -48,10 +48,10 @@ class Value :
         """
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data * other.data, (self, other), '*')
-
-        def _backward():
-            self.grad += other.data * out.grad
-            other.grad += self.data * out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += other.data * out.grad
+                other.grad += self.data * out.grad
         out._backward = _backward
 
         return out
@@ -66,9 +66,9 @@ class Value :
         """
         assert isinstance(other, (int, float)), "only supporting int/float powers for now"
         out = Value(self.data**other, (self,), f'**{other}')
-
-        def _backward():
-            self.grad += (other * self.data**(other-1)) * out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += (other * self.data**(other-1)) * out.grad
         out._backward = _backward
 
         return out
@@ -79,13 +79,13 @@ class Value :
             _type_: _description_
         """
         out = Value(0 if self.data < 0 else self.data, (self,), 'ReLU')
-
-        def _backward():
-            self.grad += (out.data > 0) * out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += (out.data > 0) * out.grad
         out._backward = _backward
 
         return out
-    
+
     def log(self):
         """
         Returns:
@@ -93,45 +93,50 @@ class Value :
         """
         assert self.data > 0, 'log value must be positive (in core)'
         out = Value(np.log(self.data), (self,), 'log')
-        def _backward():
-            self.grad += (1 / self.data) * out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += (1 / self.data) * out.grad
         out._backward = _backward
         return out
-    
+
     def exp(self):
         """
         Returns:
             _type_: _description_
         """
         out = Value(np.exp(self.data), (self,), 'exp')
-        def _backward():
-            self.grad += out.data * out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += out.data * out.grad
         out._backward = _backward
         return out
-    
+
     def tanh(self):
         """
         Returns:
             _type_: _description_
         """
         out = Value(( 1 - np.exp(2* self.data)) / (1 + np.exp( -2 * self.data)), (self,), 'tanh')
-        def _backward():
-            self.grad += out.grad * (1 - out.data**2)
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += out.grad * (1 - out.data**2)
         out._backward= _backward
         return out
-    
+
     def sigmoid(self):
         """
         Returns:
             _type_: _description_
         """
         out = Value(np.exp(self.data) / (1 + np.exp(self.data)), (self,), 'sigmoid')
-        def _backward():
-            self.grad += out.grad * out.data * (1 - out.data)
+        if Value.grad_enabled:
+            def _backward():
+                self.grad += out.grad * out.data * (1 - out.data)
         out._backward= _backward
         return out
-        
-    def leaky_relu(self, slope= 0.01): # https://docs.pytorch.org/docs/stable/generated/torch.nn.LeakyReLU.html
+    
+    def leaky_relu(self, slope= 0.01): 
+        # https://docs.pytorch.org/docs/stable/generated/torch.nn.LeakyReLU.html
         """
         Args:
             slope (float, optional): _description_. Defaults to 0.01.
@@ -140,16 +145,16 @@ class Value :
             _type_: _description_
         """
         out = Value(slope * self.data if self.data < 0 else self.data, (self,), 'leaky_relu')
-        def _backward():
-            self.grad +=  slope * out.grad if self.data < 0 else out.grad
+        if Value.grad_enabled:
+            def _backward():
+                self.grad +=  slope * out.grad if self.data < 0 else out.grad
         out._backward= _backward
         return out
-    
+
 
     def backward(self):
+        """ test
         """
-        """
-
         # topological order all of the children in the graph
         topo = []
         visited = set()
@@ -167,26 +172,84 @@ class Value :
             v._backward()
 
     def __neg__(self): # -self
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         return self * -1
 
     def __radd__(self, other): # other + self
+        """_summary_
+
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return self + other
 
     def __sub__(self, other): # self - other
+        """_summary_
+
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return self + (-other)
  
     def __rsub__(self, other): # other - self
+        """_summary_
+
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return other + (-self)
 
     def __rmul__(self, other): # other * self
+        """_summary_
+
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return self * other
 
     def __truediv__(self, other): # self / other
+        """_summary_
+
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return self * other**-1
 
     def __rtruediv__(self, other): # other / self
+        """_summary_
+
+        Args:
+            other (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return other * self**-1
 
     def __repr__(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         return f"Value(data={self.data}, grad={self.grad})"
     
