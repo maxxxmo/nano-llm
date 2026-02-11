@@ -1,6 +1,6 @@
 # Value class constructed on micrograd example of Andrej Karpathy
 import numpy as np
-
+# pylint: disable=protected-access
 class Value :
     """Value Class to follow operations
     """
