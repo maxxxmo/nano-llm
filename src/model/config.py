@@ -1,22 +1,41 @@
 from src.model.core import Value
-
-class no_grad:
+# pylint: disable=protected-access
+class NoGrad:
     """_summary_
     """
     def __enter__(self):
+        """_summary_
+        """
         self.prev_state = Value.grad_enabled
         Value.grad_enabled = False
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """_summary_
+
+        Args:
+            exc_type (_type_): _description_
+            exc_val (_type_): _description_
+            exc_tb (_type_): _description_
+        """
         Value.grad_enabled = self.prev_state
 
-class precision:
+class Precision:
     """Définit la précision des calculs (ex: 32 ou 64 bits)."""
     dtype = "float32"
     def __init__(self, type_str):
+        """_summary_
+
+        Args:
+            type_str (_type_): _description_
+        """
         self.type_str = type_str
     def __enter__(self):
-        self.old_type = precision.dtype
-        precision.dtype = self.type_str
+        """_summary_
+        """
+        self.old_type = Precision.dtype
+        Precision.dtype = self.type_str
     def __exit__(self, *args):
-        precision.dtype = self.old_type
+        """_summary_
+        """
+        Precision.dtype = self.old_type
+        

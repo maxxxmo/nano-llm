@@ -7,19 +7,19 @@ class Value :
     """
     grad_enabled = True # For no_grad mode
     def __init__(self, data, _children =(), _op=''):
-            """
-            init
-            Args:
-                data (_type_): _description_
-                _children (tuple, optional): _description_. Defaults to ().
-                _op (str, optional): _description_. Defaults to ''.
-            """
-            self.data = np.array(data, dtype=precision.dtype).item()
-            self.grad = 0
-            self._backward = lambda:None  # no gradient at initialisation
-            self._prev = set(_children) if Value.grad_enabled else set() # pour c = a + b les parents sont {a,b}
-            self._op = _op if Value.grad_enabled else '' # Operation that created this value
-    
+        """
+        init
+        Args:
+            data (_type_): _description_
+            _children (tuple, optional): _description_. Defaults to ().
+            _op (str, optional): _description_. Defaults to ''.
+        """
+        self.data = np.array(data, dtype=precision.dtype).item()
+        self.grad = 0
+        self._backward = lambda:None  # no gradient at initialisation
+        self._prev = set(_children) if Value.grad_enabled else set() # pour c = a + b les parents sont {a,b}
+        self._op = _op if Value.grad_enabled else '' # Operation that created this value
+
     def __add__(self, other):
         """
         Args:
@@ -52,9 +52,10 @@ class Value :
             def _backward():
                 self.grad += other.data * out.grad
                 other.grad += self.data * out.grad
+        else:
+            def _backward():
+                pass
         out._backward = _backward
-
-        return out
 
     def __pow__(self, other):
         """
@@ -69,6 +70,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad += (other * self.data**(other-1)) * out.grad
+        else:
+            def _backward():
+                pass
         out._backward = _backward
 
         return out
@@ -82,6 +86,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad += (out.data > 0) * out.grad
+        else:
+            def _backward():
+                pass
         out._backward = _backward
 
         return out
@@ -96,6 +103,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad += (1 / self.data) * out.grad
+        else:
+            def _backward():
+                pass
         out._backward = _backward
         return out
 
@@ -108,6 +118,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad += out.data * out.grad
+        else:
+            def _backward():
+                pass
         out._backward = _backward
         return out
 
@@ -120,6 +133,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad += out.grad * (1 - out.data**2)
+        else:
+            def _backward():
+                pass
         out._backward= _backward
         return out
 
@@ -132,6 +148,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad += out.grad * out.data * (1 - out.data)
+        else:
+            def _backward():
+                pass
         out._backward= _backward
         return out
     
@@ -148,6 +167,9 @@ class Value :
         if Value.grad_enabled:
             def _backward():
                 self.grad +=  slope * out.grad if self.data < 0 else out.grad
+        else:
+            def _backward():
+                pass
         out._backward= _backward
         return out
 
