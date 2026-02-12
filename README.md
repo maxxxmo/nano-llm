@@ -50,7 +50,7 @@ Then i need to implement activation functions but it makes me realize i have no 
 # 1 Automatic differenciation
 ***(Using Karpathy's structure but i make it up to date by adding exponential, tanh, log, sigmoid, leaky_relu), Also like pytorch do i need a with torch.no_grad mode,  and optimizer()***
 
-zeroing of gradients is already implemented in his code
+zeroing of gradients is already implemented in his code --> usefull for zeroing between epochs.
 
 ### Explication Backpropagation
 
@@ -83,6 +83,33 @@ Maintenant on veut backpropagate mais il faut que tout les nodes avant soient tr
 
 
 ## 2 Neuron class
+
+
+# Next steps
+ 0. passer en numpy le core pour efficacité computationnelle    
+
+0.5 batching
+
+1. la tokenization et embedding
+
+1.2 Fonction de pertes (cross entropy)
+
+2. les classes d'attention (head puis multi avec masquage)
+
+3. la classe transformer (avec residual connections et layer normalization)
+
+4. Fonction generate 
+
+
+
+## Change from Value to tensored values
+We were calculating each value but its to slow for a LLM. SO we will now use tensor
+Value --> Tensor
+Neuron --> Linear
+Layer --> Linear
+loops for neurons --> vectorisation
+
+
 
 
 

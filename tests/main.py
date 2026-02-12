@@ -1,6 +1,6 @@
-from src.model.neuron import MLP
+from src.model.mlp import MLP
 from src.model.optimizer import Adam
-from src.model.activation import Softmax  # Vérifie bien le nom du fichier (s)
+from src.model.activation import Softmax 
 
 model = MLP(3, [4, 4, 3], dtype='float32')
 optimizer = Adam(model.parameters(), lr=0.01) 

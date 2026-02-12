@@ -1,7 +1,7 @@
 
 import random
 import numpy as np
-from src.model.neuron import MLP
+from src.model.mlp import MLP
 from src.model.core import Value
 
 def test_debug():
