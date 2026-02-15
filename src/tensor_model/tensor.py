@@ -1,10 +1,14 @@
 import numpy as np
-from src.tensor_model.utils import unbroadcast
+from src.tensor_model.utils import unbroadcast, Config
 
 class Tensor ():
+    enable_grad = True
     def __init__ (self, data, _children=(), _op=''):
         self.data = np.array(data)
-        self._children = _children # c = a + b, c is children a & b are prev
+        if Config.enable_grad:
+            self._children = _children # c = a + b, c is children a & b are prev
+        else:
+            self._prev = set()
         self.op = _op
         self.grad = np.zeros_like(data)
         self._prev = set(_children)

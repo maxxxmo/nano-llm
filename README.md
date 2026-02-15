@@ -298,9 +298,18 @@ y=Var[x]+ϵ​x−E[x]​⋅γ+β
 
 tensor_test folder was created with Gemini
 
-# Next steps
-- torch_no grad
-- pushing to github
+## no_grad mode Context manager
+
+Pytorch no_grad mode is a ***Context Manager*** [(Context manager)](https://medium.com/@jkarma0920/python-with-context-managers-53fb10dae076)
+
+What is a Context Manager: 
+A Context Manager is used to allow, release and allocate ressources of a code inside a with block
+
+When we are in no_grad mode it deactivate operations tracking if there is an error we are sure the tracking will reactivate outside of the no_grad mode
+
+
+## Batching
+
 
 ## Sources
 
