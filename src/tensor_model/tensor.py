@@ -10,7 +10,7 @@ class Tensor ():
         else:
             self._prev = set()
         self.op = _op
-        self.grad = np.zeros_like(data)
+        self.grad = np.zeros_like(data,dtype=np.float64)
         self._prev = set(_children)
         self._backward = lambda: None
     def __repr__ (self):
@@ -61,8 +61,10 @@ class Tensor ():
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data @ other.data, _children=((self, other)), _op='@')
         def _backward():
-            self.grad += out.grad @ other.data.T
-            other.grad += self.data.T @ out.grad
+            grad_self = out.grad @ other.data.T
+            grad_other = self.data.T @ out.grad
+            self.grad += unbroadcast(grad_self, self.data.shape)
+            other.grad += unbroadcast(grad_other, other.data.shape)
         out._backward = _backward
         return out
         
@@ -188,12 +190,12 @@ class Tensor ():
         """
         return f"Value(data={self.data}, grad={self.grad})"
 
-def mean(self, axis=None, keepdims=False):
-    out_data = np.mean(self.data, axis=axis, keepdims=keepdims)
-    out = Tensor(out_data, (self,), 'mean')
-    def _backward():
-        n = self.data.size / out.data.size
-        grad = out.grad / n
-        self.grad += unbroadcast(np.ones_like(self.data) * grad, self.data.shape)
-    out._backward = _backward
-    return out
+    def mean(self, axis=None, keepdims=False):
+        out_data = np.mean(self.data, axis=axis, keepdims=keepdims)
+        out = Tensor(out_data, (self,), 'mean')
+        def _backward():
+            n = self.data.size / out.data.size
+            grad = out.grad / n
+            self.grad += unbroadcast(np.ones_like(self.data) * grad, self.data.shape)
+        out._backward = _backward
+        return out

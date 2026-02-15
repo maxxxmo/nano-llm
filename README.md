@@ -289,9 +289,27 @@ for GeLu: https://docs.pytorch.org/docs/stable/generated/torch.nn.GELU.html
 https://arxiv.org/pdf/1606.08415
 https://alaaalatif.github.io/2019-04-11-gelu/
 
+### MLP
+Using only Linear will lead us nowhere as its only change the scale of data. We need MLP.
+MLP uses fully connected layers and projection layers.
+1. Fully Connected Layer / Dense
+The goal is to augment dimensions, so we augment the output size
+2. Projection
+Dimension of dimension to fit to the next layer
+
+#### Residual connexions in a MLP
+To avoid vanishing gradient we need to add residual connexions.
+[vanishing gradient isssue](https://medium.com/@piyushkashyap045/understanding-the-vanishing-gradient-problem-in-deep-learning-840a9da6567f)
+
+Residual connexion consist in adding the input in the output. In the backward if gradients are low then after few layer during the process,
+It 'vanish' (chainrule --> multiplication) and then first layers can't learn.
+
+So we do y = f(x) + x
+
 
 ### Layernorm
-
+[layernorm](https://medium.com/@sachinsoni600517/layer-normalization-in-transformer-1a2efbff8b85)
+Layernorm is used to normalize the inputs before each layer so the information is processed the same whatever the input is.
 y=Var[x]+ϵ​x−E[x]​⋅γ+β
 
 ### Test
@@ -308,8 +326,19 @@ A Context Manager is used to allow, release and allocate ressources of a code in
 When we are in no_grad mode it deactivate operations tracking if there is an error we are sure the tracking will reactivate outside of the no_grad mode
 
 
-## Batching
+## Operation Batching
 
+To batch operations in Tensor there are no changes required in Tensor file. Indeed Batching just Consist in slicing $X$ and $Y$ to get the batches.
+
+To do that we use a special fonction: a generator. It use a loop and each incrementation it stop at the yield son ony whats needed is loaded.
+Here we do it on the __iter__ method.
+
+# TO do
+- batch norm :https://medium.com/thedeephub/batch-normalization-for-training-neural-networks-328112bda3ae ?
+- Attention
+- Transformer block
+- Embedding and positionnale encoding
+- Language model head
 
 ## Sources
 
