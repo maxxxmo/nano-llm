@@ -5,6 +5,7 @@ class Tensor ():
     enable_grad = True
     def __init__ (self, data, _children=(), _op=''):
         self.data = np.array(data)
+        self.shape = self.data.shape
         if Config.enable_grad:
             self._children = _children # c = a + b, c is children a & b are prev
         else:
@@ -61,8 +62,8 @@ class Tensor ():
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data @ other.data, _children=((self, other)), _op='@')
         def _backward():
-            grad_self = out.grad @ other.data.T
-            grad_other = self.data.T @ out.grad
+            grad_self = out.grad @ np.swapaxes(other.data, -1, -2) # swapaxes to transpose
+            grad_other = np.swapaxes(self.data, -1, -2) @ out.grad
             self.grad += unbroadcast(grad_self, self.data.shape)
             other.grad += unbroadcast(grad_other, other.data.shape)
         out._backward = _backward
@@ -199,3 +200,43 @@ class Tensor ():
             self.grad += unbroadcast(np.ones_like(self.data) * grad, self.data.shape)
         out._backward = _backward
         return out
+
+    def transpose(self, axis1, axis2):
+            out = Tensor(np.swapaxes(self.data, axis1, axis2), (self,), 'transpose')
+            def _backward():
+                self.grad += np.swapaxes(out.grad, axis1, axis2)
+            out._backward = _backward
+            return out
+
+    def reshape(self, *shape):
+        out = Tensor(self.data.reshape(*shape), (self,), 'reshape')
+        def _backward():
+            self.grad += out.grad.reshape(self.data.shape)
+        out._backward = _backward
+        return out
+
+    def view(self, *args):
+        return self.reshape(*args)
+
+
+    def masked_fill(self, mask, value):
+        mask_condition = mask.data if hasattr(mask, 'data') else mask
+        out = Tensor(np.where(mask_condition, value, self.data))
+        if hasattr(self, 'requires_grad') and self.requires_grad:
+            out._prev = {self} 
+            def _backward():
+                self.grad += np.where(mask_condition, 0.0, out.grad)
+            out._backward = _backward
+        return out
+
+    def __getitem__(self, item):
+        """_summary_
+
+        Args:
+            item (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        sliced_data = self.data[item]
+        return Tensor(sliced_data)

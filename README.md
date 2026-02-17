@@ -1,26 +1,16 @@
 # Creation of a LLM using Transformers from Scratch
+To understanding better theory behind llm's i need to build one from scratch.
+
+I start by looking at @karpathy micrograd implementtion to understand how we can track gradient, play a bit with it. Then i do a quick version of pyTorch by moving from scalar implementation of Karpathy to Tensor based structure.
+
+Next steps are LLM and transformer related implementations.
+
+# Table of content
 
 
 
 
-\- Tokenizer
-
-\- Embedding
-
-\- Self Attention
-
-\- Transformer
-
-\- Trainer
-
-\- Inference
-
-
-
-
-
-## 1 Neuron class (Scalar)
-(easiest one)
+# 1 Neuron class (Scalar)
 
 For the neuron class creation we need the following parameters:
 - weights
@@ -40,7 +30,7 @@ y --> output of the neuron
 Then i need to implement activation functions but it makes me realize i have no way of following operation for backpropagation so i need to creat a 'Automatic differenciation / Tape based autodiff' like in pytorch or the value class in Karpathy's videos
 
 
-# 1 Automatic differenciation
+# 2 Automatic differenciation
 ***(Using Karpathy's structure but i make it up to date by adding exponential, tanh, log, sigmoid, leaky_relu), Also like pytorch do i need a with torch.no_grad mode,  and optimizer()***
 
 zeroing of gradients is already implemented in his code --> usefull for zeroing between epochs.
@@ -77,25 +67,9 @@ Maintenant on veut backpropagate mais il faut que tout les nodes avant soient tr
 
 
 
-# Next steps
-
-0. passer en numpy le core pour efficacité computationnelle    
-
-1. batching
-
-2. la tokenization et embedding
-
-3. Fonction de pertes (cross entropy)
-
-4. les classes d'attention (head puis multi avec masquage)
-
-5. la classe transformer (avec residual connections et layer normalization)
-
-6. Fonction generate 
 
 
-
-# Change from Value to tensored values
+# 3 Change from Value to tensored values
 We were calculating each value but its to slow for a LLM. SO we will now use tensor
 Value --> Tensor
 Neuron --> Linear
@@ -282,6 +256,7 @@ So now we have cross entropy for each lines but  im1 and im2 where calculated in
 
 ### Optimizer
 
+Nothing special to say already understandable on the web
 
 ### ReLu / GeLu
 
@@ -312,9 +287,9 @@ So we do y = f(x) + x
 Layernorm is used to normalize the inputs before each layer so the information is processed the same whatever the input is.
 y=Var[x]+ϵ​x−E[x]​⋅γ+β
 
-### Test
-
-tensor_test folder was created with Gemini
+### Tests
+TBH
+tensor_test folder was created with Gemini as it's a personnal project i didn't plan to create a real test folder and add pytest.
 
 ## no_grad mode Context manager
 
@@ -333,12 +308,109 @@ To batch operations in Tensor there are no changes required in Tensor file. Inde
 To do that we use a special fonction: a generator. It use a loop and each incrementation it stop at the yield son ony whats needed is loaded.
 Here we do it on the __iter__ method.
 
-# TO do
-- batch norm :https://medium.com/thedeephub/batch-normalization-for-training-neural-networks-328112bda3ae ?
-- Attention
-- Transformer block
-- Embedding and positionnale encoding
-- Language model head
+# 4 Attention
+[Attention Introduction](https://www.datacamp.com/fr/blog/attention-mechanism-in-llms-intuition)
+First : [Attention is all you need](https://arxiv.org/pdf/1706.03762)
+
+I will start with single head attention then move to multiple head attention.
+Attention is used to give importance to words in a sentence using weights according to the sentence.
+
+Each token has an embedding(+encoded position) and its our inputs
+It uses 3 vectors :
+
+1. Query (Q): what the word is looking for 
+2. Key (K): what the words offer 
+3. Value (V): semantic/meaning od the word
+
+These 3 are projections of the inputs
+
+#### Matmul issue
+Before we need to improve matmul because the .T for transposition wont work with 4D Tensor
+In any case we want to switch Dim and Seq
+Transpose will change (Batch,Heads,Seq,Dim) to (Dim,Seq,Heads,Batch)
+
+np.swapaxes(Matrix, -1, -2)  will transform (Batch,Heads,Seq,Dim) to (Batch,Heads,Dim,Seq)
+
+So we first need to add the methods reshape and transpose
+
+***Back to Attention***
+
+The formula is:
+$$\text{Attention}(Q, K, V) = \text{softmax} \left( \frac{QK^T}{\sqrt{d_k}} \right) V$$
+
+Q*K is a dot product if we do it for all embeddings of a list of token we get a table. The dot product show the proximity between 2 vectors. the screen from 3b13 videos explain it well
+
+![alt text](images/attention.png)
+
+if they are related the result is bigger else it goes down
+
+Then the softmax is to normalize everything and get a sum on the same column to be equal to 1.
+So now we get a probability for each words:
+![alt text](images/attention2.png)
+
+We divide by the square root of the embedding size because ????
+#### Masking
+
+![alt text](images/attention3.png)
+
+If we want to learn to predict a word without using the words coming after we dont want to use the words on the left down of the matrix.
+So we use maskink to remove them by changing their value by -infinity before softmax
+***Back to Attention***
+
+Values Vectors
+https://youtu.be/eMlx5fFNoYc?t=794
+
+![alt text](images/attention4.png)
+
+So now we have related Q and K. Has we have a K he can now gives us information about him using V. K is the way to find the token and V is what he does.  
+
+So :
+
+$$\text{Attention}(Q, K, V) = \underbrace{\text{softmax} \underbrace{\left( \frac{QK^T}{\sqrt{d_k}} \right)}_{\text{finding related words}}}_{\text{Changing it to probability}} \times \underbrace{V}_{\text{Assigning the value of the related word}}$$
+
+The issue with attention is that the matrix ***QK*** is the square of the context size so it can be too big. This is why there are a lot of different implementation of Attention.
+
+
+# 4.5 Multi headed Attention
+
+Attention is looking at the context in the sequence in a single way. Using multiple heads of attention will permit to capture different types of relationships simultaneously. Each head learns a different representation subspace, providing a specialized update for the embedding at each position. 
+
+
+
+# 5 Transformer 
+
+## transformer block
+
+A transformer is a structure, a block that regroup different methods. (Attention is all you need!)
+In the schemes we only use the decoder part. In this part we wont use the cross attention one it is used for translation. 
+It consist in using attention and mlp together. In the 'N' block the ***masked*** attention makes word speak about themself and the feedforward learn what they say. 
+Then we add, its the residual connection.
+And we norm, we will add a layernorm layer to avoid vanishing gradient.
+
+## Transfomers
+
+
+***maskedfill error and slicing***
+When testing i realised I used methods that cascade into layer and i did not implement them.
+the method  mask_fill and __getitem__ for the slicing.
+
+
+# 6 Embedding and positionnal encoding
+
+# 7 language model Head
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Sources
 
